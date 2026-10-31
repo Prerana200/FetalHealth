@@ -7,6 +7,8 @@ import ReportHistory from "./pages/ReportHistory.jsx";
 import ScanDetail from "./pages/ScanDetail.jsx";
 import DoctorDashboard from "./pages/DoctorDashboard.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
+import Compare from "./pages/Compare.jsx";
+import Trends from "./pages/Trends.jsx";
 import Insights from "./pages/Insights.jsx";
 import Faq from "./pages/Faq.jsx";
 import Attribution from "./pages/Attribution.jsx";
@@ -34,6 +36,7 @@ export default function App() {
             <>
               <NavLink to="/patient">My scans</NavLink>
               <NavLink to="/history">History</NavLink>
+              <NavLink to="/trends">Trends</NavLink>
             </>
           )}
           {user && user.role !== "patient" && (
@@ -42,6 +45,7 @@ export default function App() {
               <NavLink to="/insights">Insights</NavLink>
             </>
           )}
+          {user && <NavLink to="/compare">Compare</NavLink>}
           {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
           <NavLink to="/faq">FAQ</NavLink>
           <NavLink to="/credits">Dataset credits</NavLink>
@@ -104,6 +108,22 @@ export default function App() {
             element={
               <RequireRole roles={["doctor", "admin"]}>
                 <DoctorDashboard />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/trends"
+            element={
+              <RequireRole roles={["patient"]}>
+                <Trends />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/compare"
+            element={
+              <RequireRole roles={["patient", "doctor", "admin"]}>
+                <Compare />
               </RequireRole>
             }
           />
