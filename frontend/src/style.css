@@ -286,3 +286,15 @@ select {
   .top, .skip, .no-print { display: none !important; }
   .result { border: 0; }
 }
+/* Admin */
+.table-wrap { overflow-x: auto; margin-bottom: 2rem; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+th, td { text-align: left; padding: 0.6rem 0.8rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-size: 0.85rem; color: var(--muted); }
+.grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 1rem; align-items: end; }
+td select { margin-top: 0; }
