@@ -1,0 +1,11 @@
+@"
+ppd dataset/
+node_modules/
+**/node_modules/
+.env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+dist/
+"@ | Set-Content .gitignore
