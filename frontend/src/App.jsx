@@ -6,6 +6,7 @@ import PatientPortal from "./pages/PatientPortal.jsx";
 import ReportHistory from "./pages/ReportHistory.jsx";
 import ScanDetail from "./pages/ScanDetail.jsx";
 import DoctorDashboard from "./pages/DoctorDashboard.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx";
 import Attribution from "./pages/Attribution.jsx";
 import RequireRole from "./auth/RequireRole.jsx";
 import { useAuth, roleHome } from "./auth/AuthContext.jsx";
@@ -30,6 +31,7 @@ export default function App() {
           {user && user.role !== "patient" && (
             <NavLink to="/doctor">Review dashboard</NavLink>
           )}
+          {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
           <NavLink to="/credits">Dataset credits</NavLink>
           {user ? (
             <button
@@ -89,6 +91,14 @@ export default function App() {
             element={
               <RequireRole roles={["doctor", "admin"]}>
                 <DoctorDashboard />
+              </RequireRole>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RequireRole roles={["admin"]}>
+                <AdminUsers />
               </RequireRole>
             }
           />

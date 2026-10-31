@@ -26,7 +26,8 @@ function writeSession(session) {
   }
 }
 
-export const roleHome = (role) => (role === "patient" ? "/patient" : "/doctor");
+export const roleHome = (role) =>
+  role === "patient" ? "/patient" : role === "admin" ? "/admin" : "/doctor";
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(() => {
