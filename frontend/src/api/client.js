@@ -1,6 +1,7 @@
 export const MAX_MB = 10;
 export const ALLOWED = ["image/jpeg", "image/png"];
 export const CLASSES = ["Abdomen", "Brain", "Femur", "Thorax", "Cervix", "Other"];
+export const ROLES = ["patient", "doctor", "admin"];
 export const LOW_CONFIDENCE = 0.6; // below this, the UI shows a warning
 
 // true = fake data in the browser, false = talk to the real backend.
@@ -93,6 +94,15 @@ const mockStore = [
   return r;
 });
 
+// Mock user list for the admin panel. Mock sign-in checks it, so deactivated users cannot sign in.
+const mockUsers = [
+  { id: "admin@example.com", name: "admin", email: "admin@example.com", role: "admin", active: true },
+  { id: "doctor.lee@example.com", name: "doctor.lee", email: "doctor.lee@example.com", role: "doctor", active: true },
+  { id: "doctor.rao@example.com", name: "doctor.rao", email: "doctor.rao@example.com", role: "doctor", active: true },
+  { id: "anna@example.com", name: "anna", email: "anna@example.com", role: "patient", active: true },
+  { id: "ravi@example.com", name: "ravi", email: "ravi@example.com", role: "patient", active: false },
+];
+
 /* ---------- Auth token ---------- */
 
 let token = null;
@@ -123,8 +133,12 @@ export async function login(email, password) {
   if (MOCK) {
     await wait(300);
     if (!email || !password) throw new Error("Enter your email and password.");
-    const role = email.includes("admin") ? "admin" : email.includes("doctor") ? "doctor" : "patient";
-    return { access_token: "mock-token", user: { id: "u1", name: email.split("@")[0], role } };
+    const known = mockUsers.find((u) => u.email === email);
+    if (known && !known.active) throw new Error("This account has been deactivated.");
+    const role =
+      known?.role ??
+      (email.includes("admin") ? "admin" : email.includes("doctor") ? "doctor" : "patient");
+    return { access_token: "mock-token", user: { id: email, name: email.split("@")[0], role } };
   }
   const res = await fetch("/api/auth/login", {
     method: "POST",
@@ -249,6 +263,7 @@ export async function saveReview(id, comment, agrees) {
   });
   if (!res.ok) throw new Error("Could not save the review.");
 }
+
 /* ---------- AI chatbot ---------- */
 
 export const CHAT_MAX_CHARS = 500;
@@ -287,6 +302,7 @@ function mockReply(text, scan) {
   return "I can explain how to upload a scan, what plane and confidence mean, and how heatmaps work. I can't give medical advice.";
 }
 
+// POST /api/chat {messages, scan_id} -> { reply }
 export async function chat(messages, scanId = null) {
   const recent = messages.slice(-CHAT_HISTORY).map(({ role, content }) => ({ role, content }));
   if (MOCK) {
@@ -302,5 +318,57 @@ export async function chat(messages, scanId = null) {
   });
   if (res.status === 429) throw new Error("You're sending messages too quickly. Wait a moment and try again.");
   if (!res.ok) throw new Error("The assistant is unavailable right now. Try again later.");
+  return res.json();
+}
+
+/* ---------- Admin ---------- */
+
+// GET /api/admin/users -> array of {id, name, email, role, active}
+export async function listUsers() {
+  if (MOCK) {
+    await wait(200);
+    return mockUsers.map((u) => ({ ...u }));
+  }
+  const res = await request("/api/admin/users");
+  if (!res.ok) throw new Error("Could not load users.");
+  return res.json();
+}
+
+// POST /api/admin/users {name, email, password, role} -> the new user. 409 = email taken.
+export async function createUser({ name, email, password, role }) {
+  if (MOCK) {
+    await wait(300);
+    if (mockUsers.some((u) => u.email === email)) {
+      throw new Error("An account with this email already exists.");
+    }
+    const u = { id: email, name, email, role, active: true };
+    mockUsers.push(u);
+    return { ...u };
+  }
+  const res = await request("/api/admin/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password, role }),
+  });
+  if (res.status === 409) throw new Error("An account with this email already exists.");
+  if (!res.ok) throw new Error("Could not create the user.");
+  return res.json();
+}
+
+// PATCH /api/admin/users/:id {role?, active?} -> the updated user
+export async function updateUser(id, changes) {
+  if (MOCK) {
+    await wait(250);
+    const u = mockUsers.find((x) => x.id === id);
+    if (!u) throw new Error("This user could not be found.");
+    Object.assign(u, changes);
+    return { ...u };
+  }
+  const res = await request(`/api/admin/users/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes),
+  });
+  if (!res.ok) throw new Error("Could not update the user.");
   return res.json();
 }

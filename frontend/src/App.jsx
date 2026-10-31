@@ -7,9 +7,13 @@ import ReportHistory from "./pages/ReportHistory.jsx";
 import ScanDetail from "./pages/ScanDetail.jsx";
 import DoctorDashboard from "./pages/DoctorDashboard.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
+import Insights from "./pages/Insights.jsx";
+import Faq from "./pages/Faq.jsx";
 import Attribution from "./pages/Attribution.jsx";
 import RequireRole from "./auth/RequireRole.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
+import Logo from "./components/Logo.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import { useAuth, roleHome } from "./auth/AuthContext.jsx";
 
 export default function App() {
@@ -21,11 +25,8 @@ export default function App() {
       <a className="skip" href="#main">Skip to content</a>
       <header className="top">
         <Link to="/" className="brand">
-          <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
-            <path d="M16 3 L29 26 A28 28 0 0 1 3 26 Z" fill="currentColor" />
-            <circle cx="16" cy="19" r="4" fill="var(--surface)" />
-          </svg>
-          FetalScan Assist
+          <Logo size={30} />
+          <span>FetalScan</span> Assist
         </Link>
         <nav aria-label="Main">
           <NavLink to="/">Home</NavLink>
@@ -36,9 +37,13 @@ export default function App() {
             </>
           )}
           {user && user.role !== "patient" && (
-            <NavLink to="/doctor">Review dashboard</NavLink>
+            <>
+              <NavLink to="/doctor">Review dashboard</NavLink>
+              <NavLink to="/insights">Insights</NavLink>
+            </>
           )}
           {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
+          <NavLink to="/faq">FAQ</NavLink>
           <NavLink to="/credits">Dataset credits</NavLink>
           {user ? (
             <button
@@ -56,6 +61,7 @@ export default function App() {
               <NavLink to="/register">Register</NavLink>
             </>
           )}
+          <ThemeToggle />
         </nav>
       </header>
       <main id="main">
@@ -102,6 +108,14 @@ export default function App() {
             }
           />
           <Route
+            path="/insights"
+            element={
+              <RequireRole roles={["doctor", "admin"]}>
+                <Insights />
+              </RequireRole>
+            }
+          />
+          <Route
             path="/admin"
             element={
               <RequireRole roles={["admin"]}>
@@ -109,6 +123,7 @@ export default function App() {
               </RequireRole>
             }
           />
+          <Route path="/faq" element={<Faq />} />
           <Route path="/credits" element={<Attribution />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
