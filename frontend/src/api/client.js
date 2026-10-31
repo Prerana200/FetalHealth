@@ -249,3 +249,58 @@ export async function saveReview(id, comment, agrees) {
   });
   if (!res.ok) throw new Error("Could not save the review.");
 }
+/* ---------- AI chatbot ---------- */
+
+export const CHAT_MAX_CHARS = 500;
+export const CHAT_HISTORY = 10; // only the latest messages are sent to the backend
+
+const EMERGENCY =
+  "If you have severe pain, heavy bleeding, leaking fluid, a fever, or the baby is moving much less than usual, contact your doctor or local emergency services now. I can't assess symptoms.";
+
+// Simple rules standing in for the real AI in mock mode.
+function mockReply(text, scan) {
+  const t = text.toLowerCase();
+  if (/(pain|bleed|emergenc|urgent|leak|fever|movement|contraction)/.test(t)) return EMERGENCY;
+  if (/(diagnos|is my baby|is it normal|healthy|risk|safe)/.test(t)) {
+    return "I can't diagnose or say whether a pregnancy is healthy. This tool only recognises which kind of ultrasound view an image shows, and a clinician must interpret it. Please ask your doctor about your scan.";
+  }
+  if (/heatmap/.test(t)) {
+    return "The heatmap highlights the areas of the image the model paid most attention to. It isn't evidence of a finding, and it can highlight areas that aren't medically important.";
+  }
+  if (/(confidence|percent|%|probab)/.test(t)) {
+    if (scan) {
+      const pct = Math.round(scan.probabilities[scan.predicted_class] * 100);
+      return `Your scan was classified as ${scan.predicted_class} with ${pct}% confidence. ${
+        pct < LOW_CONFIDENCE * 100
+          ? "That is below the 60% level, so a clearer image or a clinician's check is a good idea."
+          : "A higher figure means the model favoured that view more strongly, but a clinician still has to confirm it."
+      }`;
+    }
+    return "Confidence is how strongly the model favours its top answer. Below 60% the app shows a low-confidence warning, which means a clearer image or a clinician's check is a good idea.";
+  }
+  if (/(plane|class|brain|femur|abdomen|thorax|cervix)/.test(t)) {
+    return "A plane is the type of view an ultrasound image shows, such as Brain or Femur. The model recognises the plane; it does not assess the baby's health.";
+  }
+  if (/(upload|image|format|size|jpeg|png)/.test(t)) {
+    return "You can upload a JPEG or PNG up to 10 MB. Use anonymised images only, then press Analyse image.";
+  }
+  return "I can explain how to upload a scan, what plane and confidence mean, and how heatmaps work. I can't give medical advice.";
+}
+
+export async function chat(messages, scanId = null) {
+  const recent = messages.slice(-CHAT_HISTORY).map(({ role, content }) => ({ role, content }));
+  if (MOCK) {
+    await wait(400);
+    const last = recent.at(-1)?.content ?? "";
+    const scan = scanId ? mockStore.find((r) => r.id === scanId) : null;
+    return { reply: mockReply(last, scan) };
+  }
+  const res = await request("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages: recent, scan_id: scanId }),
+  });
+  if (res.status === 429) throw new Error("You're sending messages too quickly. Wait a moment and try again.");
+  if (!res.ok) throw new Error("The assistant is unavailable right now. Try again later.");
+  return res.json();
+}

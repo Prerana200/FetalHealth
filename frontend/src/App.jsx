@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, NavLink, Navigate, useNavigate, Link } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
@@ -6,8 +6,10 @@ import PatientPortal from "./pages/PatientPortal.jsx";
 import ReportHistory from "./pages/ReportHistory.jsx";
 import ScanDetail from "./pages/ScanDetail.jsx";
 import DoctorDashboard from "./pages/DoctorDashboard.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx";
 import Attribution from "./pages/Attribution.jsx";
 import RequireRole from "./auth/RequireRole.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
 import { useAuth, roleHome } from "./auth/AuthContext.jsx";
 
 export default function App() {
@@ -18,7 +20,13 @@ export default function App() {
     <>
       <a className="skip" href="#main">Skip to content</a>
       <header className="top">
-        <strong>FetalScan Assist</strong>
+        <Link to="/" className="brand">
+          <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
+            <path d="M16 3 L29 26 A28 28 0 0 1 3 26 Z" fill="currentColor" />
+            <circle cx="16" cy="19" r="4" fill="var(--surface)" />
+          </svg>
+          FetalScan Assist
+        </Link>
         <nav aria-label="Main">
           <NavLink to="/">Home</NavLink>
           {user?.role === "patient" && (
@@ -30,6 +38,7 @@ export default function App() {
           {user && user.role !== "patient" && (
             <NavLink to="/doctor">Review dashboard</NavLink>
           )}
+          {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
           <NavLink to="/credits">Dataset credits</NavLink>
           {user ? (
             <button
@@ -92,10 +101,23 @@ export default function App() {
               </RequireRole>
             }
           />
+          <Route
+            path="/admin"
+            element={
+              <RequireRole roles={["admin"]}>
+                <AdminUsers />
+              </RequireRole>
+            }
+          />
           <Route path="/credits" element={<Attribution />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      <footer className="foot">
+        <span>Screening support only. Not a diagnosis.</span>
+        <Link to="/credits">Dataset credits (CC BY 4.0)</Link>
+      </footer>
+      {user && <ChatWidget />}
     </>
   );
 }
