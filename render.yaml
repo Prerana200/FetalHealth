@@ -37,6 +37,11 @@ services:
       - key: VITE_API_BASE
         value: https://fetal-health-backend.onrender.com
 
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
 databases:
   - name: fetal-health-db
     plan: free
