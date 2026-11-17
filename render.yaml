@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: fetal-health-backend
     runtime: docker
@@ -30,7 +30,7 @@
     name: fetal-health-frontend
     plan: free
     buildCommand: cd frontend/frontend && npm ci && npm run build
-    publishPath: frontend/frontend/dist
+    staticPublishPath: frontend/frontend/dist
     envVars:
       - key: VITE_USE_MOCK
         value: "false"
