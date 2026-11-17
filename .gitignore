@@ -15,3 +15,33 @@ node_modules/
 # Build output
 dist/
 **/dist/
+
+# Local Python environments
+venv/
+**/venv/
+venv-old/
+**/venv-old/
+
+# Python cache and test files
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+**/.pytest_cache/
+*.pyc
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded data and generated logs
+uploads_data/
+**/uploads_data/
+logs/
+**/logs/
+
+# Frontend dependencies and builds
+node_modules/
+**/node_modules/
+dist/
+**/dist/

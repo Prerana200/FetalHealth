@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: fetal-health-backend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fetal-health-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: AI_SERVICE_URL
+        value: https://fetal-health-ai.onrender.com
+      - key: ALLOWED_ORIGINS
+        value: https://fetal-health-frontend.onrender.com
+
+  - type: web
+    name: fetal-health-ai
+    runtime: docker
+    plan: free
+    dockerfilePath: ./ai-service/Dockerfile
+    dockerContext: ./ai-service
+
+  - type: static
+    name: fetal-health-frontend
+    plan: free
+    buildCommand: cd frontend/frontend && npm ci && npm run build
+    publishPath: frontend/frontend/dist
+    envVars:
+      - key: VITE_USE_MOCK
+        value: "false"
+      - key: VITE_API_BASE
+        value: https://fetal-health-backend.onrender.com
+
+databases:
+  - name: fetal-health-db
+    plan: free

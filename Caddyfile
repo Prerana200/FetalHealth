@@ -1,0 +1,15 @@
+# Serves the built frontend and forwards /api/... to the backend (with the /api prefix removed).
+# Caddy gets and renews the https certificate for {$DOMAIN} by itself.
+{$DOMAIN} {
+	encode gzip
+
+	handle_path /api/* {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}
