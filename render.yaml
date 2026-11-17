@@ -1,4 +1,4 @@
-services:
+﻿services:
   - type: web
     name: fetal-health-backend
     runtime: docker
@@ -25,7 +25,8 @@ services:
     dockerfilePath: ./ai-service/Dockerfile
     dockerContext: ./ai-service
 
-  - type: static
+  - type: web
+    runtime: static
     name: fetal-health-frontend
     plan: free
     buildCommand: cd frontend/frontend && npm ci && npm run build
@@ -39,3 +40,4 @@ services:
 databases:
   - name: fetal-health-db
     plan: free
+
