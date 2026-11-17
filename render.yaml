@@ -28,7 +28,6 @@ services:
   - type: web
     runtime: static
     name: fetal-health-frontend
-    plan: free
     buildCommand: cd frontend/frontend && npm ci && npm run build
     staticPublishPath: frontend/frontend/dist
     envVars:
